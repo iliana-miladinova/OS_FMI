@@ -1,0 +1,42 @@
+#!/bin/bash
+
+if [[ "${#}" -eq 0 ]]; then
+    echo "Invalid number of args"
+    exit 1
+fi
+
+#if [[ ! -f "${1}" ]]; then
+ #   echo "The first arg must be a file"
+  #  exit 2
+#fi
+
+uniq_str=$(pwgen | cut -f 1)
+
+dictionary=$(mktemp)
+files=$(mktemp)
+
+for arg in "${@}"; do
+    if echo "${arg}" | grep -E -q "^-R[A-Za-z0-9]+=[A-Za-z0-9]+"; then
+        to_replace=$(echo "${arg}" | cut -d '=' -f 1 | sed -E 's/(-R)([A-Za-z0-9]+)/\2/')
+        replace_with=$(echo "${arg}" | cut -d '=' -f 2)
+        echo "${to_replace}=${replace_with}" >> "${dictionary}"
+    elif echo "${arg}" | grep -Eqv '-' && [[ -f "${arg}" ]]; then
+        echo "${arg}" >> "${files}"
+    else
+        echo "Invalid arg"
+        exit 2
+    fi
+    #sed -E -i "s/\b${to_replace}\b/${replace_with}${uniq_str}/g" "${file_name}"
+
+done
+
+while read file_name; do
+    while read dict; do
+        replace=$(echo "${dict}" | cut -d '=' -f 1)
+        replacement=$(echo "${dict}"| cut -d '=' -f 2)
+        sed -E -i "s/\b${replace}\b/${replacement}${uniq_str}/g" "${file_name}"
+    done < "${dictionary}"
+    sed -E -i "/^[^#]/ s/${uniq_str}//g" "${file_name}"
+done < "${files}"
+#sed -E -i "s/(\b[A-Za-z0-9])${uniq_str}\b/\1/g" "${file_name}"
+#sed -E -i "s/${uniq_str}//g" "${file_name}"
