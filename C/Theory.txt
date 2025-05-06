@@ -1,0 +1,93 @@
+- where to write our c code in the main file from this dir: cp -r /srv/c_sample/ task1
+
+-- COMMANDS:
+- exit(exit status, message: %s"message"), no po-dobre da izpolzvame err
+- err(exit status, message: %s"message")
+- errno - gets the status of the last executed command
+- warn - nqma da prekrati programata
+- warn - shte prekrati programata
+- close(fd - file descriptor) - closes the file
+	- returns < 0 if unsucessfull
+	- returns 0 if ok
+- open <file>
+	- returns -1, if the file can't be opened
+	- returns 0, if the file can be opened
+- <n read bytes> read(fd, buff, sizeof(buff)) - primer za buffer: &c, sizeof(c)
+	- -1 - sucessefull read
+	- 0 - end of file
+	- n != sizeof(buff) - end of file while reading or there was another problem
+	- n == sizeof(buff) - ok
+- make - compile the main.c file
+- lseek(fd, offset(>/< 0), SEEK_END/SET(v nachaloto)/CURR) - 
+	- -1 - sucessefull read
+	- 0 - end of file
+	- n != sizeof(buff) - end of file while reading or there was another problem
+	- n == sizeof(buff) - ok
+- struct stat??? - st_size - za da vzemem siza na fila
+- snprintf - ako iskame da otpechatvame chislo (no printf etc, ne gi izpolzvame)
+
+
+
+Tipove zadachi:
+1) Read/write zadachi
+2) Sinhronizaciya 
+
+Komandi
+xxd <file_name> - dava bajtovete ot fajla v hex format i teksta otstrani
+int open(const char* fn, int mode...);
+			mode:  -O_RDONLY
+				-O-RDWR
+				-S_IRWXU			
+int close(int fd)
+
+man 3 <comm> - man stranicite za comandite ot sistemni iziskvaniya (open, close...)
+
+exit(int eval);
+err(int eval, ...);
+errx(int eval,...); - abstrahira se ot poslednata stojnost na errno
+errno - v nego se zapazva koda na greshkite
+
+Ako otvaryame fajlovi descriptori, da gi zatvaryame predi da terminirame programata!!!
+
+int read(int fd, void* buff, size_t size)   -> broj projeteni baytove
+int write(int fd, const void* buff, size_t size)   -> broj zapisani baytove
+off_t lseek(int fd, off_t offset , int whence)
+                      offset - otmestvane spryamo whence
+			offset < 0 -> nalyavo
+				> 0 -> nadyasno			
+			whence: SEEK_SET -> nachalo na fayla
+				SEEK_CUR -> poziciya na lseek v momenta
+				SEEK_END -> kray na fayla
+		
+<stdint.h>
+	uint8_t
+	uint16_t
+	uint32_t
+	uint64_t
+
+
+
+
+stat(path, struct stat)
+fstat(fd, struct stat)
+
+da si pripomnya kak se obrashta ot Big v Little Endian
+
+<sys/stat.h> - za stat structurata
+pri open za fayl, koyto zasdavame, tryabva da mu dadem prava za dostap s S_I{R,W,X}{USR,OTH,GR}
+
+atoi (const *) - ASCII to int
+
+<stdlib.h> - tuk e atoi
+
+
+
+
+
+
+Zadachi:
+2016-SE-02
+2017-SE-01
+2018-SE-03
+
+strtol - string to long

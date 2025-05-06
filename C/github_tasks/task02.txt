@@ -1,0 +1,48 @@
+/*
+  Реализирайте команда head без опции (т.е. винаги да извежда
+  на стандартния изход само първите 10 реда от съдържанието на
+  файл подаден като първи параматър)
+*/
+
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <err.h>
+
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        errx(1, "Invalid num of args");
+    }
+
+    int fd1;
+    const char* file = argv[1];
+
+    if ((fd1 = open(file, O_RDONLY)) == -1) {
+        err(2, "Could not open file %s", file);
+    }
+
+    char ch;
+    int byteCount;
+    int lines = 0;
+
+    while ((byteCount = read(fd1, &ch, sizeof(ch))) == sizeof(ch)) {
+        if (ch == '\n') {
+            lines++;
+        }
+
+        if (write(1, &ch, sizeof(ch)) == -1) {
+            err(2, "Could not write char to output");
+        }
+
+        if (lines == 10) {
+            break;
+        }
+    }
+
+    if (byteCount == -1) {
+        err(3, "Could not read from file");
+    }
+
+    close(fd1);
+    exit(0);
+}
