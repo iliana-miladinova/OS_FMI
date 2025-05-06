@@ -1,0 +1,46 @@
+ #!/bin/bash
+  2
+  3 #if [[ $(id -u) -ne 0 ]]; then
+  4  #   echo "The script must be run as root" 1>&2
+  5   #  exit 1
+  6 #fi
+  7
+  8 if [[ "${#}" -ne 1 ]]; then
+  9     echo "Invalid numbeer of args" 1>&2
+ 10     exit 1
+ 11 fi
+ 12
+ 13 if [[ ! -f "${1}" ]]; then
+ 14     echo "The arg must be a file" 1>&2
+ 15     exit 1
+ 16 fi
+ 17
+ 18 filename="${1}"
+ 19
+ 20 while read line; do
+ 21     dir=$(echo "${line}" | awk '{print $1}')
+ 22     my_type=$(echo "${line}" | awk '{print $2}')
+ 23     mode=$(echo "${line}" | awk '{print $3}')
+ 24     while read line2; do
+ 25         file=$(echo "${line2}" | awk '{print $2}')
+ 26         curr_perms=$(echo "${line2}" | awk '{print $1}')
+ 27         if [[ "${my_type}" == 'R' ]]; then
+ 28             chmod "${mode}" "${file}"
+ 29         elif [[ "${my_type}" == 'A' ]]; then
+ 30             new_perms=$(( ${mode} | ${curr_perms} ))
+ 31             chmod "${new_perms}" "${file}"
+ 32         elif [[ "${my_type}" == 'T' ]]; then
+ 33             new_perms=$(( ${mode} | ${curr_perms} ))
+ 34
+ 35             if [[ -f "${file}" ]]; then
+ 36                 new_perms=$(( ${new_perms} & ~002 ))
+ 37             elif [[ -d "${file}" ]]; then
+ 38                 new_perms=$(( ${new_perms} & ~022 ))
+ 39             fi
+ 40
+ 41             chmod "${new_perms}" "${file}"
+ 42         fi
+ 43
+ 44
+ 45     done < <(find "${dir}" -mindepth 1 -printf "%m %p\n")
+ 46 done < "${filename}"

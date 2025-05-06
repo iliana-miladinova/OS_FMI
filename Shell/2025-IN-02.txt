@@ -1,0 +1,55 @@
+#!/bin/bash
+
+if [[ "${#}" -ne 2 ]]; then
+    echo "Invalid number of args" 1>&2
+    exit 1
+fi
+
+if [[ ! -f "${2}" ]]; then
+    echo "The 2nd arg must be a file" 1>&2
+    exit 1
+fi
+
+string="${1}"
+
+input_data="${2}"
+
+uniq_artists=$(mktemp)
+
+cat "${input_data}" | awk '{print $3}' | sort | uniq >> "${uniq_artists}"
+#cat "${uniq_artists}"
+
+while read artist; do
+    echo "; team ${artist}"
+    curr_artist_teams=$(mktemp)
+    grep -E "${artist}" "${input_data}" >> "${curr_artist_teams}"
+    #cat "${curr_artist_teams}"
+
+    curr_artists_hostnames=$(mktemp)
+    cat "${curr_artist_teams}" | awk '{print $1}' >> "${curr_artists_hostnames}"
+
+    curr_artists_composer=$(mktemp)
+    cat "${curr_artist_teams}" | awk '{print $2}' >> "${curr_artists_composer}"
+
+    while read composer; do
+        while read hostname; do
+            echo "${composer} IN NS ${hostname}.${string}."
+        done < "${curr_artists_hostnames}"
+    done < "${curr_artists_composer}"
+
+    rm "${curr_artist_teams}"
+    rm "${curr_artists_hostnames}"
+    rm "${curr_artists_composer}"
+    #while read line; do
+        #if echo "${line}" | grep -E -q "${artist}"; then
+            #hostname=$(echo "${line}" | awk '{print $1}')
+            #composer=$(echo "${line}" | awk '{print $2}')
+            #hostname=$(echo "${line}" | awk '{print $1}')
+
+            #echo "${composer} IN NS ${hostname}.${string}."
+           # curr_artist_teams=$(mktemp)
+
+        #fi
+    #done < "${input_data}"
+done < "${uniq_artists}"
+rm "${uniq_artists}"

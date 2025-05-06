@@ -1,0 +1,67 @@
+#!/bin/bash
+
+if [[ "${#}" -ne 1 ]]; then
+    echo "Invalid number of args"
+    exit 1
+fi
+
+if ! echo "${1}" | grep -E -q "([1-9]+[0-9]*)|[0-9]*)"; then
+    echo "The first arg must be a num"
+    exit 2
+fi
+
+val_chords=$(mktemp)
+
+{
+echo "0 A"
+echo "1 Bb"
+echo "2 B"
+echo "3 C"
+echo "4 Db"
+echo "5 D"
+echo "6 Eb"
+echo "7 E"
+echo "8 F"
+echo "9 Gb"
+echo "10 G"
+echo "11 Ab"
+} >> "${val_chords}"
+
+input=$(mktemp)
+cat > "${input}"
+
+cat "${input}"
+
+chords_from_input=$(mktemp)
+
+
+while read line; do
+    if echo "${line}" | grep -E -q '^\[[0-9]*[A-Z]*[a-z]*\]'; then
+        achord=$(echo "${line}" | grep -E -o '^\[[0-9]*[A-Z]*[a-z]*\]')
+        echo "${achord}" >> "${chords_from_input}"
+    fi
+done
+
+uniq_chords=$(mktemp)
+
+cat "${chords_from_input}" | sort | uniq >> "${uniq_chords}"
+
+key=$(pwgen)
+while read chord; do
+    main_tone=$(echo "${chord}" | head -c 3 | tr -d '[]' | grep -E -o '([A-G])|([A-G]b')
+    curr_ind=$(cat "${val_chords}" | grep -E "\b${main_tone}\b" | awk '{print $1}')
+
+    sum=$(( $curr_ind + ${1} ))
+    new_ind=$(( $sum % 12 ))
+    new_chord=$(awk -v ind="${new_ind}" '{if(ind==$1) {print $2}}' "${val_chords}")
+
+    sed -i -E "s/\[${main_tone}([A-Za-z0-9]*)\]/[${key}${new_chord}\1]/g" "${input}"
+done < "${uniq_chords}"
+
+sed -E -i "s/${key}([A-G]|[A-G]b)/\1/g" "${input}"
+cat "${input}"
+
+rm "${val_chords}"
+rm "${input}"
+rm "${chords_from_input}"
+rm "${uniq_chords}"

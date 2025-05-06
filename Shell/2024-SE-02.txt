@@ -1,0 +1,40 @@
+#!/bin/bash
+
+local_users=$(mktemp)
+
+if [[ -z "${PASSWD}" ]]; then
+    PASSWD=/etc/passwd
+fi
+cat "${PASSWD}" | awk -F ':' '{if($3 >= 1000){print $1}}' > "${local_users}"
+
+#cat "${local_users}"
+
+exec_path="$(dirname "$0")/occ"
+
+prevcloud_users=$(mktemp)
+
+"${exec_path}" user:list | cut -d ' ' -f 2 | cut -d ':' -f 1 > "${prevcloud_users}"
+
+while read local_user; do
+    if ! grep -q -E "^- ${local_user}.*" "${prevcloud_users}"; then
+        "${exec_path}" user:add "${local_user}"
+    else
+        enabled=$(./occ user:info "${local_user}" | grep 'enabled:' | awk -F ':' '{print $2}' | xargsc)
+        if [[ "${enabled}" == "false" ]]; then
+            "${exec_path}" user:enable "${local_user}"
+        fi
+    fi
+
+done < "${local_users}"
+
+while read prev_user; do
+    if ! grep -q -E "^${prev_user}.*" "${local_users}"; then
+        enabled=$(./occ user:info "${prev_user}" | grep 'enabled:' | awk -F ':' '{print $2}' | xargs)
+        if [[ "${enabled}" == "true" ]]; then
+            "${exec_path}" user:disable "${prev_user}"
+        fi
+    fi
+done < "${prevcloud_users}"
+
+rm "${local_users}"
+rm "${prevcloud_users}"
