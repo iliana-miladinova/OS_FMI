@@ -1,0 +1,75 @@
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <err.h>
+#include <sys/stat.h>
+
+typedef struct {
+    uint16_t offset;
+    uint8_t b1;
+    uint8_t b2;
+} patch_t;
+
+int main(int argc, char* argv[]) {
+    if (argc != 4) {
+        errx(1, "Invalid num of args");
+    }
+
+    int fd1 = open(argv[1], O_RDONLY);
+    if (fd1 < 0) {
+        err(2, "Could not open file %s", argv[1]);
+    }
+
+    int fd2 = open(argv[2], O_RDONLY);
+    if(fd2 < 0) {
+        err(2, "Could not open file %s", argv[2]);
+    }
+
+    int pd1 = open(argv[3], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+    if (pd1 < 0) {
+        err(2, "Could not open file %s", argv[3]);
+    }
+
+    struct stat st1, st2;
+    if (fstat(fd1, &st1) < 0) {
+        err(3, "Could not stat %s", argv[1]);
+    }
+
+    if (fstat(fd2, &st2) < 0) {
+        err(3, "Could not stat %s", argv[2]);
+    }
+
+    if (st1.st_size != st2.st_size) {
+        errx(4, "Different file sizes");
+    }
+
+    uint8_t byte1, byte2;
+    uint16_t offset = 0;
+    int bytes_count1, bytes_count2;
+
+    while ((bytes_count1 = read(fd1, &byte1, sizeof(byte1))) == sizeof(byte1) && 
+           (bytes_count2 = read(fd2, &byte2, sizeof(byte2))) == sizeof(byte2)) {
+        if (byte1 != byte2) {
+            patch_t p;
+            p.offset = offset;
+            p.b1 = byte1;
+            p.b2 = byte2;
+
+            if (write(pd1, &p, sizeof(p)) != sizeof(p)) {
+                err(5, "Could not write to %s", argv[3]);
+            }
+        }
+        offset++;
+    }
+
+    if (bytes_count1 < 0 || bytes_count2 < 0) {
+        err(6, "Could not read %s %s", argv[1], argv[2]);
+    }
+
+    close(fd1);
+    close(fd2);
+    close(pd1);
+    exit(0);
+}
