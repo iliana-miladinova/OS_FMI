@@ -1,0 +1,120 @@
+#include <unistd.h>
+#include <stdlib.h>
+#include <err.h>
+#include <string.h>
+
+int main(int argc, char* argv[]) {
+    if (argc != 3 && argc != 5) {
+        errx(1, "Invalid num of args");
+    }
+
+    int num1 = 0;
+    int num2 = 0;
+    int flag = 0;
+    char fieldsep = ' ';
+
+    if (argc == 3) {
+        if (strcmp(argv[1], "-c") != 0) {
+            errx(2, "The input should consist -c");
+        }
+
+        if (strlen(argv[2]) == 1) {
+            num1 = atoi(argv[2]);
+            num2 = num1;
+        }
+        else if (strlen(argv[2]) == 3 && argv[2][1] == '-') {
+            num1 = atoi(argv[2]);
+            num2 = atoi(argv[2] + 2);
+
+            if (num1 > num2) {
+                errx(3, "Invalid range");
+            }
+        }
+        else {
+            errx(4, "Invalid format");
+        }
+    }
+    else if (argc == 5) {
+        if (strcmp(argv[1], "-d") != 0) {
+            errx(5, "The input should consist -d");
+        }
+
+        flag = 1;
+        fieldsep = argv[2][0];
+
+        if (strcmp(argv[3], "-f") != 0) {
+            errx(6, "The input should consist -f");
+        }
+
+        if (strlen(argv[4]) == 1) {
+            num1 = atoi(argv[4]);
+            num2 = num1;
+        }
+        else if (strlen(argv[4]) == 3 && argv[4][1] == '-') {
+            num1 = atoi(argv[4]);
+            num2 = atoi(argv[4] + 2);
+
+            if (num1 > num2) {
+                errx(3, "Invalid range");
+            }
+        }
+        else {
+            errx(4, "Invalid format");
+        }
+    }
+
+    int len = 1;
+    char byte;
+    int bytes_count;
+    int curr_field = 1;
+
+    while ((bytes_count = read(0, &byte, sizeof(byte))) == sizeof(byte)) {
+        if (flag == 0) {
+            if (byte == '\n') {
+                len = 1;
+                if (write(1, &byte, sizeof(byte)) != sizeof(byte)) {
+                    err(7, "Could not write byte to output");
+                }
+                continue;
+            }
+
+            if (len >= num1 && len <= num2) {
+                if (write(1, &byte, sizeof(byte)) != sizeof(byte)) {
+                    err(7, "Could not write byte to output");
+                }
+            }
+            len++;
+        }
+        else {
+            if (byte == '\n') {
+                curr_field = 1;
+                if (write(1, &byte, sizeof(byte)) != sizeof(byte)) {
+                    err(7, "Could not write byte to output");
+                }
+                continue;
+            }
+
+            if (byte == fieldsep) {
+                curr_field++;
+                if (curr_field >= num1 + 1 && curr_field <= num2) {
+                    if (write(1, &byte, sizeof(byte)) != sizeof(byte)) {
+                        err(7, "Could not write byte to output");
+                    }
+                }
+                continue;
+            }
+
+            if (curr_field >= num1 && curr_field <= num2) {
+                if (write(1, &byte, sizeof(byte)) != sizeof(byte)) {
+                    err(7, "Could not write byte to output");
+                }
+            }
+        }
+    }
+
+    if (bytes_count < 0) {
+        err(8, "Could not read from input");
+    }
+
+    return 0;
+}
