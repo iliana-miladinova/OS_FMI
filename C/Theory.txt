@@ -85,9 +85,58 @@ atoi (const *) - ASCII to int
 
 
 
-Zadachi:
-2016-SE-02
-2017-SE-01
-2018-SE-03
-
 strtol - string to long
+
+
+
+08/05/2025
+
+exec()
+exec("/usr/bin/ls", "ls", (char*) NULL)
+
+execlp("ls", "ls", (char*) NULL)                 
+exec* p -> env var PATH
+
+execvp
+execv
+
+
+fork
+-ako sme v deteto, fork shte ni e varnal 0
+-ako sme v roditelya shte varne pid na deteto
+- <0 -> greshka pri fork
+fork returns type pid_t
+
+pid_t pid = fork();
+if pid < 0 {
+	err
+}
+if pid == 0 {
+//child
+}
+else {
+//parent
+}
+
+wait(NULL) - ne e preporachitelno da se izpolzva
+
+int status;
+wait(&status)
+
+                main process
+                  /       \
+parent process(fork)      child process (fork)
+
+
+WIFEEXITED(status); - 497 slide from the presentation
+WWEXITSTATUS(status);
+
+
+
+zadachi:
+github/07.c.process/T1, T2, T3, T4
+zad.106 2016-SE-02
+zad 98 2022-SE-01
+
+ako ne ni interesuva kak zavarshva procesa, ne slagame wait
+moje wait(null)
