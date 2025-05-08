@@ -1,0 +1,75 @@
+#include <err.h>
+#include <stdint.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+uint8_t check(const uint8_t* buff, uint8_t size) {
+    uint8_t res = 0;
+    for (uint8_t i = 0; i < size; i++) {
+        res ^= buff[i];
+    }
+    return res;
+}
+
+int main(int argc, char* argv[]) {
+    if (argc != 3) {
+        errx(1, "Invalid num of args");
+    }
+
+    int fd1 = open(argv[1], O_RDONLY);
+    if (fd1 < 0) {
+        err(2, "Could not open file %s", argv[1]);
+    }
+
+    int fd2 = open(argv[2], O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
+    if (fd2 < 0) {
+        err(3, "Could not create file %s", argv[2]);
+    }
+
+    uint8_t buff[256];
+    uint8_t byte;
+    uint8_t N = 0;
+    uint8_t checksum = 0;
+
+    int bytes_count = 0;
+
+    while ((bytes_count = read(fd1, &byte, sizeof(byte))) == sizeof(byte)) {
+        if (byte == 0x55) {
+            buff[0] = byte;
+
+            if (read(fd1, &N, sizeof(N)) != sizeof(N)) {
+                err(4, "Could not read N");
+            }
+
+            buff[1] = N;
+
+            if (N < 3) {
+                errx(5, "N should be greater than 3");
+            }
+
+            for (int i = 2; i < N-1; i++) {
+                if((bytes_count = read(fd1, &buff[i], sizeof(buff[i]))) != sizeof(buff[i])) {
+                    if (bytes_count == 0) {
+                        err(6, "Reached end before end of N");
+                    }
+                    err(7, "Could not read buff");
+                }
+            }
+
+            if (read(fd1, &checksum, sizeof(checksum)) != sizeof(checksum)) {
+                err(8, "Could not read check sum");
+            }
+
+            if (checksum == check(buff, N-1)) {
+                buff[N-1] = checksum;
+            }
+
+            if (write(fd2, &buff, N) != N) {
+                err(9, "Could not write to file %s", argv[2]);
+            }
+        }
+    }
+    close(fd1);
+    close(fd2);
+    return 0;
+}
