@@ -129,7 +129,7 @@ parent process(fork)      child process (fork)
 
 
 WIFEEXITED(status); - 497 slide from the presentation
-WWEXITSTATUS(status);
+WEXITSTATUS(status);
 
 
 
@@ -140,3 +140,23 @@ zad 98 2022-SE-01
 
 ako ne ni interesuva kak zavarshva procesa, ne slagame wait
 moje wait(null)
+
+
+
+09/05/2025
+snprintf - the only function from <stdio.h> we are allowed to use during the exam
+
+tmux new - razdelyame si terminala na dva terminala +   cntr + b , then %,  exit -> to exit the second terminal
+
+
+exec("filename", <list of args>)
+execl("filename", <arg0>, <arg1>,...,NULL)
+execv("filename", char* const[]);
+execp("cat")    cat is alias for /usr/bin/cat  so in execp "cat" will work
+execlp
+execvp
+
+which <command> - shows the location of the command in the OS, ex. which date -> /usr/bin/date
+
+fork()
+pid_t fork()
