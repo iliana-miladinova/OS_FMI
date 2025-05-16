@@ -1,0 +1,93 @@
+#include <unistd.h>
+#include <err.h>
+#include <string.h>
+#include <sys/wait.h>
+
+int wrapped_read(int fd, void* buff, size_t size) {
+    int r = read(fd, buff, size);
+    if (r < 0) {
+        err(2, "Could not read from file");
+    }
+    return r;
+}
+
+int wrapped_write(int fd, void* buff, int size) {
+    int w = write(fd, buff, size);
+    if (w < 0) {
+        err(2, "Could not write to file");
+    }
+    return w;
+}
+
+int main(int argc, char* argv[]) {
+    if (argc == 1) {
+        char ch;
+        int bytes_count;
+
+        while ((bytes_count = wrapped_read(0, &ch, sizeof(ch))) > 0) {
+            wrapped_write(1, &ch, sizeof(ch));
+        }
+
+        if (bytes_count < 0) {
+            err(3, "Could not read from stdin");
+        }
+    } else if (argc == 2) {
+        char* command = argv[1];
+        if (strlen(command) > 4) {
+            errx(1, "Too long command");
+        }
+
+        char ch;
+        char buff[1024];
+        int char_count = 0;
+        int bytes_count;
+
+        while ((bytes_count = wrapped_read(0, &ch, sizeof(ch))) > 0) {
+            if (ch == ' ' || ch == '\n') {
+                buff[char_count] = '\0';
+                char_count = 0;
+
+                if (strlen(buff) > 0 && strlen(buff) <= 4) {
+                    pid_t child = fork();
+
+                    if (child == -1) {
+                        err(4, "Could not fork process");
+                    }
+
+                    if (child == 0) {
+                        if (execlp(command, command, buff, NULL) < 0) {
+                            err(5, "Could not execute the command");
+                        }
+                    }
+
+                    int status;
+                    if (wait(&status) < 0) {
+                        err(6, "Could not wait");
+                    }
+
+                    if (!WIFEXITED(status)) {
+                        err(7, "Could not exit normally");
+                    }
+
+                    if (WEXITSTATUS(status) != 0) {
+                        err(8, "Exited with status != 0");
+                    }
+
+                } else {
+                    err(9, "Too long param len");
+                }
+            } else {
+                buff[char_count] = ch;
+                char_count++;
+            }
+
+            if (bytes_count == -1) {
+                err(2, "Could not read from stdin");
+            }
+        }
+    } else {
+        errx(1, "Invalid num of args");
+    }
+
+    return 0;
+}
