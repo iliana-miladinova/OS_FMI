@@ -1,0 +1,45 @@
+#include <err.h>
+#include <sys/wait.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+// Да се напише програма на С, която получава като параметър команда (без параметри)
+// и при успешното ѝ изпълнение, извежда на стандартния изход името на командата.
+
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        errx(1, "Invalid num of args");
+    }
+
+    const char* my_command = argv[1];
+
+    pid_t child = fork();
+
+    if (child < 0) {
+        err(2, "Could not fork");
+    }
+
+    if (child == 0) {
+        if (execlp(my_command, my_command, (char*)NULL) < 0) {
+            err(3, "Could not exec %s", my_command);
+        }
+    }
+
+    int status;
+    if (wait(&status) < 0) {
+        err(4, "Could not wait");
+    }
+
+    if (!WIFEXITED(status)) {
+        errx(5, "Child was not exited normally");
+    }
+
+    if (WEXITSTATUS(status) != 0) {
+        errx(6, "Child exit code != 0");
+    }
+
+    dprintf(1,"command %s was successfully executed %d\n", my_command, WEXITSTATUS(status));
+
+    exit(0);
+}
