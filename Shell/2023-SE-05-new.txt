@@ -1,0 +1,56 @@
+#!/bin/bash
+
+limit=65536
+interval=1
+peek_count=0
+
+# temp файл за броя на надвишаванията
+over_the_limit_count=$(mktemp)
+
+while true; do
+    curr_ps=$(mktemp)
+    ps -e -o rss=,comm= > "$curr_ps"
+
+    commands_with_gt_65536=0
+
+    # Списък с уникални команди
+    all_commands=$(awk '{print $2}' "$curr_ps" | sort | uniq)
+
+    # Обхождаме всички уникални команди
+    for curr_command in $all_commands; do
+        rss_per_command=$(awk -v cmd="$curr_command" '$2 == cmd {sum += $1} END {print sum}' "$curr_ps")
+
+        if [[ "$rss_per_command" -gt "$limit" ]]; then
+            commands_with_gt_65536=$((commands_with_gt_65536 + 1))
+
+            line=$(grep -E "^$curr_command " "$over_the_limit_count")
+            if [[ -n "$line" ]]; then
+                count=$(echo "$line" | awk '{print $2}')
+                newCount=$((count + 1))
+                sed -i -E "s/^($curr_command )$count/\1$newCount/" "$over_the_limit_count"
+            else
+                echo "$curr_command 1" >> "$over_the_limit_count"
+            fi
+        fi
+    done
+
+    rm "$curr_ps"
+
+    if [[ "$commands_with_gt_65536" -eq 0 ]]; then
+        break
+    fi
+
+    peek_count=$((peek_count + 1))
+    sleep "$interval"
+done
+
+# Извеждане на резултата
+while read -r line; do
+    comm=$(echo "$line" | awk '{print $1}')
+    count=$(echo "$line" | awk '{print $2}')
+    if (( count * 2 >= peek_count )); then
+        echo "$comm"
+    fi
+done < "$over_the_limit_count"
+
+rm "$over_the_limit_count"

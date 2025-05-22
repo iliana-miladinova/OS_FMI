@@ -1,0 +1,163 @@
+- where to write our c code in the main file from this dir: cp -r /srv/c_sample/ task1
+
+-- COMMANDS:
+- exit(exit status, message: %s"message"), no po-dobre da izpolzvame err
+- err(exit status, message: %s"message")
+- errno - gets the status of the last executed command
+- warn - nqma da prekrati programata
+- warn - shte prekrati programata
+- close(fd - file descriptor) - closes the file
+	- returns < 0 if unsucessfull
+	- returns 0 if ok
+- open <file>
+	- returns -1, if the file can't be opened
+	- returns 0, if the file can be opened
+- <n read bytes> read(fd, buff, sizeof(buff)) - primer za buffer: &c, sizeof(c)
+	- -1 - sucessefull read
+	- 0 - end of file
+	- n != sizeof(buff) - end of file while reading or there was another problem
+	- n == sizeof(buff) - ok
+- make - compile the main.c file
+- lseek(fd, offset(>/< 0), SEEK_END/SET(v nachaloto)/CURR) - 
+	- -1 - sucessefull read
+	- 0 - end of file
+	- n != sizeof(buff) - end of file while reading or there was another problem
+	- n == sizeof(buff) - ok
+- struct stat??? - st_size - za da vzemem siza na fila
+- snprintf - ako iskame da otpechatvame chislo (no printf etc, ne gi izpolzvame)
+
+
+
+Tipove zadachi:
+1) Read/write zadachi
+2) Sinhronizaciya 
+
+Komandi
+xxd <file_name> - dava bajtovete ot fajla v hex format i teksta otstrani
+int open(const char* fn, int mode...);
+			mode:  -O_RDONLY
+				-O-RDWR
+				-S_IRWXU			
+int close(int fd)
+
+man 3 <comm> - man stranicite za comandite ot sistemni iziskvaniya (open, close...)
+
+exit(int eval);
+err(int eval, ...);
+errx(int eval,...); - abstrahira se ot poslednata stojnost na errno
+errno - v nego se zapazva koda na greshkite
+
+Ako otvaryame fajlovi descriptori, da gi zatvaryame predi da terminirame programata!!!
+
+int read(int fd, void* buff, size_t size)   -> broj projeteni baytove
+int write(int fd, const void* buff, size_t size)   -> broj zapisani baytove
+off_t lseek(int fd, off_t offset , int whence)
+                      offset - otmestvane spryamo whence
+			offset < 0 -> nalyavo
+				> 0 -> nadyasno			
+			whence: SEEK_SET -> nachalo na fayla
+				SEEK_CUR -> poziciya na lseek v momenta
+				SEEK_END -> kray na fayla
+		
+<stdint.h>
+	uint8_t
+	uint16_t
+	uint32_t
+	uint64_t
+
+
+
+
+stat(path, struct stat)
+fstat(fd, struct stat)
+
+da si pripomnya kak se obrashta ot Big v Little Endian
+
+<sys/stat.h> - za stat structurata
+pri open za fayl, koyto zasdavame, tryabva da mu dadem prava za dostap s S_I{R,W,X}{USR,OTH,GR}
+
+atoi (const *) - ASCII to int
+
+<stdlib.h> - tuk e atoi
+
+
+
+
+
+
+strtol - string to long
+
+
+
+08/05/2025
+
+exec()
+exec("/usr/bin/ls", "ls", (char*) NULL)
+
+execlp("ls", "ls", (char*) NULL)                 
+exec* p -> env var PATH
+
+execvp
+execv
+
+
+fork
+-ako sme v deteto, fork shte ni e varnal 0
+-ako sme v roditelya shte varne pid na deteto
+- <0 -> greshka pri fork
+fork returns type pid_t
+
+pid_t pid = fork();
+if pid < 0 {
+	err
+}
+if pid == 0 {
+//child
+}
+else {
+//parent
+}
+
+wait(NULL) - ne e preporachitelno da se izpolzva
+
+int status;
+wait(&status)
+
+                main process
+                  /       \
+parent process(fork)      child process (fork)
+
+
+WIFEEXITED(status); - 497 slide from the presentation
+WEXITSTATUS(status);
+
+
+ako ne ni interesuva kak zavarshva procesa, ne slagame wait
+moje wait(null)
+
+
+
+09/05/2025
+snprintf - the only function from <stdio.h> we are allowed to use during the exam
+
+tmux new - razdelyame si terminala na dva terminala +   cntr + b , then %,  exit -> to exit the second terminal
+
+
+exec("filename", <list of args>)
+execl("filename", <arg0>, <arg1>,...,NULL)
+execv("filename", char* const[]);
+execp("cat")    cat is alias for /usr/bin/cat  so in execp "cat" will work
+execlp
+execvp
+
+which <command> - shows the location of the command in the OS, ex. which date -> /usr/bin/date
+
+fork()
+pid_t fork()
+
+
+
+16/05/2025
+int pipe(int pipefd[2])              0->read   1->write
+
+mkfifo - named pipe

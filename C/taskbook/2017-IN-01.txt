@@ -1,0 +1,96 @@
+#include <fcntl.h>
+#include <err.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/stat.h>
+
+typedef struct {
+    uint16_t offset;
+    uint8_t len;
+    uint8_t padding;
+} complect;
+
+int main(int argc, char* argv[]) {
+    if (argc != 5) {
+        errx(1, "Invalid num of args");
+    }
+
+    int fd_dat1 = open(argv[1], O_RDONLY);
+    if (fd_dat1 < 0) {
+        err(2, "Could not open file %s", argv[1]);
+    }
+
+    int fd_idx1 = open(argv[2], O_RDONLY);
+    if (fd_idx1 < 0) {
+        err(2, "Could not open file %s", argv[2]);
+    }
+
+    int fd_dat2 = open(argv[3], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+    if (fd_dat2 < 0){
+        err(2, "Could not open file %s", argv[3]);
+    }
+
+    int fd_idx2 = open(argv[4], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+    if(fd_idx2 < 0) {
+        err(2, "Could not open file %s", argv[4]);
+    }
+
+    struct stat s;
+    if (fstat(fd_idx1, &s) < 0) {
+        err(3, "Failed stat");
+    }
+
+    if (s.st_size % sizeof(complect) != 0) {
+        errx(4, "%s has invalid size format", argv[2]);
+    }
+
+    int entries = s.st_size / sizeof(complect);
+    complect c;
+    complect new_entry;
+    uint16_t new_offset = 0;
+    uint8_t buff[256];
+
+    for (int i = 0; i < entries; i++) {
+        if (read(fd_idx1, &c, sizeof(c)) != sizeof(c)) {
+            err(5, "Error reading ind");
+        }
+
+        if (lseek(fd_dat1, c.offset, SEEK_SET) == -1) {
+            err(7, "Failed seek in dat");
+        }
+
+        if (c.len == 0) {
+            continue;
+        }
+
+        if (read(fd_dat1, buff, c.len) != c.len) {
+            err(8, "Failed reading bytes");
+        }
+
+        if (buff[0] < 'A' || buff[0] > 'Z') {
+            continue;
+        }
+
+        if (write(fd_dat2, buff, c.len) != c.len) {
+            err(9, "Failed witing to %s", argv[3]);
+        }
+
+        new_entry.offset = new_offset;
+        new_entry.len = c.len;
+        new_entry.padding = 0;
+
+        if (write(fd_idx2, &new_entry, sizeof(new_entry)) != sizeof(new_entry)) {
+            err(10, "failed writing to %s", argv[4]);
+        }
+
+        new_offset += c.len;
+    }
+
+    close(fd_idx1);
+    close(fd_dat1);
+    close(fd_idx2);
+    close(fd_dat2);
+
+    return 0;
+}

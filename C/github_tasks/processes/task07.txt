@@ -1,0 +1,44 @@
+// Да се напише програма на С, която получава като параметри три команди (без параметри),
+// изпълнява ги последователно, като изчаква края на всяка и извежда на стандартния изход номера
+// на завършилия процес, както и неговия код на завършване.
+
+#include <err.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <stdio.h>
+
+int main(int argc, char* argv[]) {
+    if (argc != 4) {
+        errx(1, "Invalid num of processes");
+    }
+
+    for (int i = 1; i <= 3; i++) {
+        const char* cmd = argv[i];
+
+        pid_t child = fork();
+
+        if (child < 0) {
+            err(2, "Could not fork");
+        }
+
+        if (child == 0) {
+            execlp(cmd, cmd, (char*)NULL);
+            err(3, "Could not exec %s", cmd);
+        }
+
+        int status;
+        if (wait(&status) < 0) {
+            err(4, "Could not wait");
+        }
+
+        if (!WIFEXITED(status)) {
+            errx(5, "Child %d was not exited normally", i);
+        }
+
+        if (WEXITSTATUS(status) != 0) {
+            errx(6, "Child %d exit code != 0", i);
+        }
+
+        // dprintf(1, "command %s was successfully executed %d\n", cmd, WEXITSTATUS(status));
+    }
+}

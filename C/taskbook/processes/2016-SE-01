@@ -1,0 +1,76 @@
+#include <fcntl.h>
+#include <err.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+int wrapped_pipe(int pipefd[2]) {
+    int p = pipe(pipefd);
+
+    if (p < 0) {
+        err(1, "Could not pipe");
+    }
+    return p;
+}
+
+pid_t wrapped_fork(void) {
+    pid_t child = fork();
+
+    if (child < 0)  {
+        err(2, "Could not fork");
+    }
+
+    return child;
+}
+
+int wrapped_wait(void) {
+    int status;
+
+    if (wait(&status) < 0) {
+        err(6, "Could not wait");
+    }
+
+    if (!WIFEXITED(status)) {
+        errx(7, "Child was not exited normally");
+    }
+
+    if (WEXITSTATUS(status)) {
+        errx(8, "Exit status != 0");
+    }
+
+    return status;
+}
+
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        err(4, "Invalid num of args");
+    }
+
+    int pipefd[2];
+    wrapped_pipe(pipefd);
+
+    pid_t cat_child = wrapped_fork();
+
+    if (cat_child == 0) {
+        close(pipefd[0]);
+        dup2(pipefd[1], 1);
+        close(pipefd[1]);
+        execlp("cat", "cat", argv[1], (const char*) NULL);
+        err(3, "Could not exec cat");
+    }
+
+    pid_t sort_child = wrapped_fork();
+
+    if (sort_child == 0) {
+        close(pipefd[1]);
+        dup2(pipefd[0], 0);
+        close(pipefd[0]);
+        execlp("sort", "sort", (const char*) NULL);
+        err(5, "Could not exec sort");
+    }
+
+    close(pipefd[1]);
+    close(pipefd[0]);
+
+    wrapped_wait();
+    wrapped_wait();
+}

@@ -1,0 +1,35 @@
+път, започващ с / е абсолютен път
+/  ----> root
+zapochvame ot korena   
+/
+/usr
+/usr/bin/ls
+
+.  current directory
+.. parent directory(predishnata)
+
+/user/lib/../bin   e sashtoto kato /user/bin
+pwd - koya e tekushtata rabotna direktoriya
+
+apropos <neshto> - Printi vsichki man stranici v koito se spomenava neshto za <neshto>
+
+ls -l - vrashta symlink - daljinata na fajla(symlink) e ravna na daljinata na imeto na fajla, na kojto sme napravili symlink
+readlink <ime na symlink> - vrashta imeto na fajla, na kojto sme napravili symlink
+symlinka realno nyama prava, no pravata sa mu sashtite kato na originalniya fajl
+
+nyakoi komandi mogat da razgranichavat koe e symlink i koe be, -L pokazva, che shte posledva symlinka
+
+file<neshto> - kazva kakvo e tova neshto(naprimer directoriya, ASCII text, etc.)
+
+links+num - return more links than num
+links-num
+
+moje v edna komanda dva pati da polzavme edin i sashti filtar(-size +5 -size -10)
+
+atime(access time)
+mtime(modify time) - Refers to the last time the file content was modified.
+Changes when the file’s data is modified.
+Does not change when permissions or ownership are changed.
+ctime(change time) - Refers to the last time the file’s metadata was changed.
+Changes when the file’s content is modified or when metadata (like permissions, owner, or link count) is updated.
+ctime is updated when a file is deleted or moved.

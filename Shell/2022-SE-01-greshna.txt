@@ -1,0 +1,40 @@
+#!/bin/bash
+  2
+  3 WAKEUP_FILE="example-wakeup"
+  4 #cat "${WAKEUP_FILE}"
+  5 if [[ "${#}" -ne 1 ]]; then
+  6     echo "Invalid number of args"
+  7     exit 1
+  8 fi
+  9
+ 10 if [[ ! -f "${1}" ]]; then
+ 11     echo "The param must be a file"
+ 12     exit 2
+ 13 fi
+ 14
+ 15 while read line; do
+ 16     clean_line=$(echo "${line}" | sed 's/#.*//')
+ 17     if [[ -n "${clean_line}" ]]; then
+ 18         device=$(echo "${clean_line}" | awk '{print $1}')
+ 19        # echo "${device}"
+ 20         if [[ ${#device} -gt 4 ]]; then
+ 21             echo "The name is too long" 1>&2
+ 22             continue
+ 23         fi
+ 24         my_status=$(echo "${clean_line}" | awk '{print $2}')
+ 25        # echo "${my_status}"
+ 26         cat "${WAKEUP_FILE}" | grep -E -q "^${device}"
+ 27         if [[ $? -eq 0 ]]; then
+ 28             status_wakeup=$(cat "${WAKEUP_FILE}" | grep -E "${device}" | awk '{print $3}')
+ 29             if [[ "*${my_status}" != "${status_wakeup}" ]]; then
+ 30                echo "${device}" >> "${WAKEUP_FILE}"
+ 31             else
+ 32                 echo "The device is set to the desired status" 1>&2
+ 33             fi
+ 34         else
+ 35             echo "No such devise" 1>&2
+ 36         fi
+ 37     fi
+ 38
+ 39 done < <(cat "${1}")
+~

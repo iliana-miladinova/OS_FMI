@@ -1,0 +1,293 @@
+ls /srv/sample-data    -  vhodni danni za zadachite ot sbornika
+
+
+
+ls -l - vrashta symlink - daljinata na fajla(symlink) e ravna na daljinata na imeto na fajla, na kojto sme napravili symlink
+readlink <ime na symlink> - vrashta imeto na fajla, na kojto sme napravili symlink
+symlinka realno nyama prava, no pravata sa mu sashtite kato na originalniya fajl
+
+nyakoi komandi mogat da razgranichavat koe e symlink i koe be, -L pokazva, che shte posledva symlinka
+
+file<neshto> - kazva kakvo e tova neshto(naprimer directoriya, ASCII text, etc.)
+
+links+num - return more links than num
+links-num
+
+moje v edna komanda dva pati da polzavme edin i sashti filtar(-size +5 -size -10)
+
+atime(access time)
+mtime(modify time) - Refers to the last time the file content was modified.
+Changes when the file’s data is modified.
+Does not change when permissions or ownership are changed.
+ctime(change time) - Refers to the last time the file’s metadata was changed.
+Changes when the file’s content is modified or when metadata (like permissions, owner, or link count) is updated.
+ctime is updated when a file is deleted or moved.
+
+
+
+13/03/25
+head -n -6  -> mahni poslednite 6 
+tail -n +6  ->  mahni parvite 6
+head -n 6    ->   parvite 6
+tail -n 6 ->  poslednite 6
+
+!!!Vajno za predvaritelniya izpit
+tar -caf <name>.tar.gz  <name>  - tova da go polzvame kato arhivirame
+tar -xaf <name>.tar.gz    - tova da go pravim kato razarhivirame
+-caf (create auto file)
+
+!!!!! Na izpita da napravim kopie na papkata s resheniyata predi da ya archivirame(za da ne si zatriem resheniyata)
+
+-potoci za danni
+input ustrojstvo->	0    stdin
+			1    stdout - > output ustrojstvo
+			2    stderr - > output ustrojstvo
+
+- variable = $(          2>/dev/null) - prenasochva greshkite ot komandata v dev/null, a neshtata, koito se izvejdat ot komandata gi zapazva vav variable
+
+-  text > file -overwrite the current contend of the file
+-  text >> file - append at the end of the file and dont clear the current contend of the file
+-  command1 && command2  -  run command1 and than run command2 after it
+
+wc  -l -> lines
+	- c ->bytes
+	-m ->chars
+	-w -> words
+wc (naj chesto se izpolzva ,kogato v nyakava zadacha iskame da sortirame po broj sreshtaniya)
+
+tr -d ' ' -> delete all the spaces
+tr -d ' ', -s -> replaces a char with another text
+tr [a-z] [A-Z] -> makes all letters in the file capital
+	[:alnum:] -matches alphabet and number == [a-z] [A-Z] [0-9]
+
+cut -d '\t'  f(number of the column) -d '\t'
+
+uniq  -  removes the dublicate rows
+uniq -c  - broi povtoreniyata na vseki red
+za uniq e hubavo neshtata da sa sortirani predi tova
+
+comm - pravi neshtata ot naprimer 2 fajla(file1 file2) - v parvata kolona izlizat neshtata ot file1, vav vtorata ot file2, v tretata neshatata, koito gi ima i v dvata fajla
+
+
+
+0200 cat /etc/passwd | sort -t ':' -n -k 3
+0210 cat /etc/passwd | cut -d ':' -f 1,5 | cut -d ',' -f 1
+0211 cat /etc/passwd | head -n 1 | cut -c 2-6
+0213 cat /etc/passwd | cut -d ':' -f 6 | cut -d '/' -f 3-
+delimiter 1/2/3   - kolonite se broyat ot tova predi razdelitelya
+2000   cat /etc/passwd | head -n 151 | tail -n -1
+	 cat /etc/passwd | head -n 13 | tail -n 1 | tail -c 4
+
+Зад. 8 2018-SE-03  cat /etc/passwd |grep "$(cat /etc/passwd | head -n 201 | tail -n +201 | cut -d ':' -f 4)"|cut -d ':'  -f 4|uniq
+
+
+
+rev - prints the rows backwards
+nl - for every row it prints the number of the row in front of it
+uniq - searches for dublicates only between rows that are next to each other(compares only neighboring rows)
+uniq -i - ignores upper case and lower case (it thinks of 'C' and 'c' as the same character)
+
+cut <file_name> -c 1-4 - izveshda samo simvolite ot 1 do 4 na vseki red
+cat /etc/passwd | rev | cut -c 1-4 | rev  -  vreashta poslednite 4 simvola na vseki red
+
+tr 1234 ABC - i 3 i 4 stavat C ( vsichko ot tretiyat simvol natam stave posledniyat simvol v neshtoto ,s koeto zamestvame)
+
+grep -v <neshto> - vrashta vsichki redove, v koito ne se sadarja <neshto>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       REGEX
+na izpita chesto ednata zadacha e s procesi, a drugata e tekstova obrabotka
+
+. - proizvolen simvol
+* - mojestvo (0 do mnogo)
++ - (pone edno)
+? - nula ili edno
+[aouei] - glasna
+(cat | dog) - ili
+^  - v nachaloto na reda
+$  - Kraj na reda
+\< \>   -duma
+\b duma
+\b <duma>\b   sashtoto kato \< \>
+[^:alnum:] - bukva ili cifra v nachaloto na reda
+[^:alnum:]{3,}   pone 3 sreshatniya
+[^:alnum:]{,3}   do 3 sreshatniya
+[^:alnum:]{3,4}   mejdu 3 i 4 sreshatniya
+[^:alnum:]{3}   3 sreshatniya
+
+(cat|dog).*\1 - da se povtarya cat ili dog
+(nyakakv niz)(cat|dog).*\2  - da se povtarya cat ili dog
+
+.* nyakakv simvol da se povtarya mnogo pati
+
+
+
+
+		Shell scripts
+#!/bin/bash
+
+#1       #2        #3        #4     
+$var    ${var}   "$var"    "${var}"  - promenlivi
+
+filename{1,2,3}   filename1
+		filename2
+		filename3
+$var{1,2,3}        var1 var2 var3
+
+
+"file name"  file name
+
+"${var}" - naj dobriyat variant ( zashtoto ne sme sigurni dali imame intervali(kakvi sa testovite danni na izpita))
+
+"${var}{1,2,3}"  - taka go pravim
+
+
+$var{1,2,3}   $var1 $var2 $var3 sas speisove
+${var}{1,2,3}
+
+
+
+sas spaces - #3, #4
+brace expansion - #2, #4
+na dvete mestav razboti #4  zatova e naj-dobro
+
+
+"${@}"  -
+"${*}"  - i tova i gornoto vrushtat vsichki argumenti podadeni na scripta
+
+"${*}"  -    dava "${1} ${2} ..."
+"${@}"  - dava "${1}" "${2}" ....        (po-polezno (zaradi speisovete)
+"${#}"   - dava brojat na argumnetite
+"${#}" == 3  dali brojat na argumentite e 3
+
+
+alias get_value="cat /etc/passwd | grep "rada"   - veche get_value e rezultata ot tazi komanda
+get_value    vrashta rezultata ot komandata
+
+
+
+env  -  vrashta vsichki environment variables za sesiyata    
+
+env TEMP=temp - za seiyata echo $TEMP e echo "temp"  - da go vidya
+
+var="$(...)" - var poluchava celiyat tekst ot izpalnenieto na programata
+
+
+
+ps - dava procesite v momenta
+ps      -e     vrashta informaciya za vsichki procesi
+	-o    moje da si slojim koi koloni da ni izpisva
+
+kill - ubiva nyakakvi selektirani procesi
+	-9 - Kill all processes you can kill
+	-9 <pid>
+killall - kill processes by name
+
+sleep <vreme> - prispiva procesa za nyakakvo vreme
+sleep <vreme> & - taka shte go izpalni v backgrounda
+
+
+grep -E "^[^s].*"  - vsichko koeto ne zapochva s 's'
+
+
+04-a-5000 ps -e --sort etimes -o cmd | tail
+
+
+
+
+
+vim
+ako natisnem i v nov fail vlizame v rejim za pisane
+esc - obratno v normalen rejim
+w - zapazva promenite
+$ - izprashta ni v kraya na tekushtiyat red
+^ - nachaloto na tekushtiya red
+b
+w
+e
+d-delete    db-trie vsichko do nachaloto na preishnata duma
+de
+x-trie edin simvol
+moje da se pravyat kombinacii s d i drugite
+
+G-izprashta ni na posledniya red na fajla
+gg - na parviya red
+
+dd-trie celiyat red
+
+y-kopirane(yanking) izpolzvame go v kombinaciya s dugite klavishi
+p-postavyane
+c(klavish) - trie neshto ot fajla i ni vrashta v rejim insert
+u - undo
+ctrl+r - redo
+
+3<nyakakva komand(klavish)>izpalnyava nyakva komanda 3 pati
+5x - trie 5 simvola
+8G - mesti ni v nachaloto na 8 red
+
+a- otvarya insert rejim kato ni mesti s 1 pokazalec napred
+o - insert rejim kato ni slaga nov red
+
+
+
+
+grep --color 'neshto'    ocvetyava tova, koeto e machnalo grep v cherveno
+grep -o "neshto" test.txt prinitira vsichko, koeto e machnalo neshto po 1 na red, a ne celiyat red, na kojto e neshto
+grep -c neshto  - broyat na redovete, v koito se sreshta neshto
+
+man 7 regex - man stranicata za regexi
+
+sed
+info sed - ima neshta za sed skriptove
+sed 's/search/replace/' text.txt - tursi {search} i go zamestva s {replace}     po default zamestva samo parvoto sreshtane na vseki red
+sed 's/search/replace/g' - taka zamestva absolutno vsichki sreshtaniya
+
+
+
+
+
+
+
+
+
+awk       BEGIN {   }
+	{dejstvie prerabotka)}
+	END {  }
+	$0 - whole row
+	$1 - 1st field
+	$n n-th field
+	NF - pazi za vseki red nomera na fieldovete (number(#) field)
+	NR - current row
+
+grep -q  - quiet grep(ne printira nishto, izpolzva se za testove [[ ]])
+
+da ne polzvam ~=
+if ! grep -q -E "<regex>" $1   $1-fajla
+
+
+
+edna zadacha za procesi ii edna za scriptove
+
+
+
+
+
+
+
+bg - runs job in the background
+fg -  || - || - || in the foreground
+
+
+ne moje da cat-vame vremenen fajl, zashtoto kogato go cat-vam toj veche ne sashtestvuva

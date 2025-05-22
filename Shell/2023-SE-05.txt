@@ -1,0 +1,58 @@
+#!/bin/bash
+
+all_commands=$(mktemp)
+ps -e -o comm= >> "${all_commands}"
+total_rss_command=$(mktemp)
+over_the_limit_count=$(mktemp)
+seeings=0
+while true; do
+    curr_ps=$(mktemp)
+    ps -e -o rss=,comm= >> "${curr_ps}"
+    commands_with_gt_65536=0
+    while read curr_command; do
+        rss_per_command=$(cat "${curr_ps}" | awk -v curr_command="${curr_command}" 'BEGIN { sum = 0 } {if($2 == curr_command) { sum += $1}} END {print sum}')
+        #echo $rss_per_command
+
+        line=$(grep -E "^${curr_command}" "${total_rss_command}")
+        if [[ -n "${line}" ]]; then
+        old_rss_per_command=$(echo "${line}" | awk -F ' ' '{print $2}')
+        new_rss_per_command=$(( $rss_per_command + $old_rss_per_command ))
+        sed -i -E "s/(^${curr_command} )${old_rss_per_command}/\1${new_rss_per_command}/" "${total_rss_command}"
+
+        if [[ "${new_rss_per_command}" -gt 65536 ]]; then
+            #echo "${curr_command}","${seeings}" >> "${seeings_commands}"
+            commands_with_gt_65536=$(( commands_with_gt_65536 + 1 ))
+            line2=$(grep -E "^${curr_command}" "${over_the_limit_count}")
+
+            if [[ -n "${line2}" ]]; then
+                count=$(echo "${line2}" | awk '{print $2}')
+                newCount=$(( $count + 1 ))
+                sed -E -i "s/(^${curr_command} )${count}/\1${newCount}/" "${over_the_limit_count}"
+            else
+                echo "${curr_command} 1" >> "${over_the_limit_count}"
+            fi
+            #echo $commands_with_gt_65536
+        fi
+        else
+            echo "${curr_command} ${rss_per_command}" >> "${total_rss_command}"
+        fi
+    done < <(cat "${all_commands}" | sort | uniq)
+    if [[ $commands_with_gt_65536 -eq 0 ]]; then
+        break
+    fi
+    seeings=$(( $seeings + 1 ))
+    sleep 1
+    rm "${curr_ps}"
+done
+
+while read line; do
+    comm=$(echo "${line}" | awk '{print $1}')
+    count=$(echo "${line}" | awk '{print $2}')
+    if (( $count * 2 >= $seeings )); then
+        echo "${comm}"
+    fi
+done < "${over_the_limit_count}"
+
+rm "${all_commands}"
+rm "${total_rss_command}"
+rm "${over_the_limit_count}"

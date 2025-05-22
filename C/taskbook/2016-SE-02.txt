@@ -1,0 +1,78 @@
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <err.h>
+#include <sys/stat.h>
+
+typedef struct {
+    uint32_t offset;
+    uint32_t len;
+} pair;
+
+int main(int argc, char* argv[]) {
+    if (argc != 4) {
+        errx(1, "Invalid num of args");
+    }
+
+    const char* file1 = argv[1];
+    const char* file2 = argv[2];
+    const char* file3 = argv[3];
+
+    int fd1 = open(file1, O_RDONLY);
+    if (fd1 < 0) {
+        err(2, "Could not open file1");
+    }
+
+    int fd2 = open(file2, O_RDONLY);
+    if (fd2 < 0) {
+        err(2, "Could not open file2");
+    }
+
+    int fd3 = open(file3, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    if (fd3 < 0) {
+        err(3, "Could not open file3");
+    }
+
+    struct stat st;
+    if (fstat(fd1, &st) < 0) {
+        err(5, "fstat failed");
+    }
+
+    if (st.st_size % (2 * sizeof(uint32_t)) != 0) {
+        errx(6, "Incorrect size of file1");
+    }
+
+    pair p;
+    int bytes_count1, bytes_count2;
+
+    while ((bytes_count1 = read(fd1, &p.offset, sizeof(p.offset))) == sizeof(p.offset) &&
+           (bytes_count2 = read(fd1, &p.len, sizeof(p.len))) == sizeof(p.len)) {
+        
+        if (lseek(fd2, p.offset * sizeof(uint32_t), SEEK_SET) < 0) {
+            err(7, "Lseek failed");
+        }
+
+        for (uint32_t i = 0; i < p.len; i++) {
+            uint32_t num;
+
+            if (read(fd2, &num, sizeof(num)) != sizeof(num)) {
+                err(8, "Failed to read num from file2");
+            }
+
+            if (write(fd3, &num, sizeof(num)) != sizeof(num)) {
+                err(9, "Failed to write num to file3");
+            }
+        }
+    }
+
+    if (bytes_count1 < 0 || bytes_count2 < 0) {
+        err(10, "Failed to read a pair from file1");
+    }
+
+    close(fd1);
+    close(fd2);
+    close(fd3);
+
+    exit(0);
+}
