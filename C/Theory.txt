@@ -161,3 +161,7 @@ pid_t fork()
 int pipe(int pipefd[2])              0->read   1->write
 
 mkfifo - named pipe
+
+
+02/06/2025
+ECHILD
